@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from logging import Logger
 
 from application.common.transaction import BaseTransactionManager
+from domain.common.role import Roles
 from domain.users.repository import BaseUserRepository
 from domain.users.user import User
 
@@ -49,7 +50,7 @@ class GetAllAdmins:
 
     async def __call__(self) -> str:
         users_list = await self.user_repository.get_all()
-        admins = [user for user in users_list if user.role == "admin"]
+        admins = [user for user in users_list if user.role == Roles.ADMIN.value]
 
         result = "Список администраторов:\n"
         if admins:

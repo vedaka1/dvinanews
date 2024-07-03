@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from logging import Logger
 
 from application.common.transaction import BaseTransactionManager
+from domain.common.role import Roles
 from domain.users.repository import BaseUserRepository
 
 
@@ -15,10 +16,10 @@ class PromoteUserToAdmin:
         user = await self.user_repository.get_by_id(user_id)
         if not user:
             return "Пользователь не найден"
-        if user.role == "admin":
+        if user.role == Roles.ADMIN.value:
             return "Пользователь уже имеет права администратора"
         try:
-            user.role = "admin"
+            user.role = Roles.ADMIN.value
             await self.user_repository.update(user)
         except Exception as e:
             self.logger.error("usecase: UpdateUserRole error: {0}".format(e))
@@ -42,11 +43,11 @@ class DemoteUser:
         if not user:
             return "Пользователь не найден"
 
-        if user.role == "user":
+        if user.role == Roles.USER.value:
             return f"Пользователь {user.telegram_id} понижен в правах"
 
         try:
-            user.role = "user"
+            user.role = Roles.USER.value
             await self.user_repository.update(user)
         except Exception as e:
             self.logger.error("usecase: UpdateUserRole error: {0}".format(e))

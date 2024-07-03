@@ -1,11 +1,9 @@
-from aiogram import Bot, F, Router, filters, types
-from aiogram.fsm.context import FSMContext
+from aiogram import Router, filters, types
 from dishka import AsyncContainer
 
 from application.usecases.users.get_user import GetAllAdmins
 from application.usecases.users.update_user import DemoteUser, PromoteUserToAdmin
 from domain.common.response import Response
-from presentation.common.keyboards import kb
 from presentation.common.texts import text
 from presentation.middlewares.admin import AdminMiddleware
 

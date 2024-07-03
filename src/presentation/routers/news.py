@@ -11,6 +11,7 @@ from application.usecases.users.update_user import (
     UnsubscribeUser,
 )
 from domain.common.response import Link, Response
+from domain.common.role import Roles
 from infrastructure.config import settings
 from presentation.common.keyboards import kb
 from presentation.common.texts import text
@@ -102,7 +103,7 @@ async def cmd_request_access(
             return await message.answer("Вы уже отправили запрос")
         get_admin_interactor = await di_container.get(GetUserByTelegramId)
         user = await get_admin_interactor(user_id, username)
-        if user.role == "admin":
+        if user.role == Roles.ADMIN.value:
             return await message.answer("У вас уже есть права администратора")
         users.append(user_id)
         await bot.send_message(

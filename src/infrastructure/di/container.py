@@ -11,14 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from application.common.client import AsyncAppClient
 from application.common.parser import Parser
 from application.common.transaction import BaseTransactionManager
-
-# from application.usecases.commands import *
 from application.usecases.commands import GetNews
 from application.usecases.users import *
 from application.usecases.users.get_user import GetAllSubscribedUsers
 from application.usecases.users.update_user import SubscribeUser, UnsubscribeUser
 from domain.users.repository import BaseUserRepository
-from infrastructure.config import settings
 from infrastructure.persistence.main import (
     create_session_factory,
     get_async_engine,

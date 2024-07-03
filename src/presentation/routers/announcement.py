@@ -36,8 +36,7 @@ async def process_text(message: types.Message, state: FSMContext) -> None:
     Announcement.image, F.data.casefold() == "image_yes"
 )
 async def process_image_yes(callback: types.CallbackQuery) -> None:
-    await callback.message.delete()
-    await callback.message.answer("Отправьте картинку")
+    await callback.message.edit_text("Отправьте картинку", reply_markup=None)
 
 
 @announcement_router.callback_query(Announcement.image, F.data.casefold() == "image_no")
@@ -45,15 +44,14 @@ async def process_image_no(
     callback: types.CallbackQuery, state: FSMContext, bot: Bot
 ) -> None:
     data = await state.get_data()
-    await callback.message.delete()
-    await callback.message.answer("Объявление будет выглядеть так:")
+    await callback.message.edit_text(
+        "Объявление будет выглядеть так:", reply_markup=None
+    )
     await send_announcement_preview(message=callback.message, data=data)
 
 
 @announcement_router.message(Announcement.image, F.photo)
-async def process_add_image(
-    message: types.Message, state: FSMContext, bot: Bot
-) -> None:
+async def process_add_image(message: types.Message, state: FSMContext) -> None:
     image_from_url = message.photo[-1].file_id
     data = await state.update_data(image=image_from_url)
     await message.answer("Объявление будет выглядеть так:")
@@ -121,6 +119,7 @@ async def process_send_announcement_yes(
 async def process_send_announcement_no(
     callback: types.CallbackQuery, state: FSMContext
 ) -> None:
+    await callback.message.delete()
     await cancel_handler(message=callback.message, state=state)
 
 
@@ -128,7 +127,7 @@ async def process_send_announcement_no(
 @announcement_router.message(F.text.casefold() == "cancel")
 async def cancel_handler(message: types.Message, state: FSMContext) -> None:
     """
-    Allow user to cancel any action
+    Allow user to cancel announcement creation.
     """
     current_state = await state.get_state()
     if current_state is None:

@@ -14,7 +14,7 @@ def set_scheduler_tasks(
         send_news_task,
         "cron",
         day_of_week="*",
-        hour="9-23",
+        hour="8-23",
         minute=f"*/{MINUTE}",
         second="00",
         kwargs={"bot": bot, "container": container},

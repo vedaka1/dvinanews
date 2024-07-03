@@ -1,0 +1,44 @@
+version: '3.8'
+
+name: dvinanewsbot
+
+services:
+
+  dvinanewsbot:
+    container_name: dvinanewsbot
+    hostname: dvinanewsbot
+    build: ./
+    depends_on:
+      dvinanewsbot_db:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - internal
+    command: sh -c "alembic upgrade head && python main.py"
+
+  dvinanewsbot_db:
+    container_name: dvinanewsbot_db
+    image: postgres:15.1
+    hostname: dvinanewsbot_db
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - internal
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
+
+networks:
+  internal:
+    driver: bridge

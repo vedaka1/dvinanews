@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
 
+    SMTP_PASSWORD: str
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_EMAIL: str
+    SMTP_SUBJECT: str
+
     HEAD_ADMIN_TG_ID: int
 
     @property

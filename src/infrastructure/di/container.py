@@ -1,5 +1,6 @@
 import logging
 from functools import lru_cache
+from smtplib import SMTP_SSL
 from typing import AsyncGenerator
 
 from aiohttp import ClientSession
@@ -12,10 +13,12 @@ from application.common.client import AsyncAppClient
 from application.common.parser import Parser
 from application.common.transaction import BaseTransactionManager
 from application.usecases.commands import GetNews
+from application.usecases.commands.send_message import SendMessage
 from application.usecases.users import *
 from application.usecases.users.get_user import GetAllSubscribedUsers
 from application.usecases.users.update_user import SubscribeUser, UnsubscribeUser
 from domain.users.repository import BaseUserRepository
+from infrastructure.config import settings
 from infrastructure.persistence.main import (
     create_session_factory,
     get_async_engine,
@@ -23,6 +26,7 @@ from infrastructure.persistence.main import (
 )
 from infrastructure.persistence.repositories.user import UserRepository
 from infrastructure.persistence.transaction import TransactionManager
+from infrastructure.smtp.main import BaseSMTPServer, SMTPServer
 
 
 @lru_cache(1)
@@ -33,6 +37,19 @@ def init_logger() -> logging.Logger:
         encoding="UTF-8",
         format="%(asctime)s %(levelname)s: %(message)s",
     )
+
+
+@lru_cache(1)
+def init_smtp_server() -> SMTPServer:
+    server = SMTPServer(
+        SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT),
+        settings.SMTP_EMAIL,
+        settings.SMTP_PASSWORD,
+        settings.SMTP_EMAIL,
+        settings.SMTP_SUBJECT,
+    )
+    server.start()
+    return server
 
 
 class SettingsProvider(Provider):
@@ -51,6 +68,10 @@ class SettingsProvider(Provider):
     @provide(scope=Scope.APP)
     def async_app_client(self) -> AsyncAppClient:
         return ClientSession()
+
+    @provide(scope=Scope.APP)
+    def app_smtp_server(self) -> BaseSMTPServer:
+        return init_smtp_server()
 
     @provide(scope=Scope.APP)
     def parser(self) -> Parser:
@@ -92,6 +113,7 @@ class UseCasesProvider(Provider):
     get_news = provide(GetNews)
     subscribe_user = provide(SubscribeUser)
     unsubscribe_user = provide(UnsubscribeUser)
+    send_message = provide(SendMessage)
 
 
 @lru_cache(1)

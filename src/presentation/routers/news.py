@@ -3,6 +3,7 @@ from aiogram.fsm.context import FSMContext
 from dishka import AsyncContainer
 
 from application.usecases.commands.get_news import GetNews
+from application.usecases.commands.send_message import SendMessage
 from application.usecases.users.create_user import CreateUser
 from application.usecases.users.get_user import GetUserByTelegramId
 from application.usecases.users.update_user import (
@@ -51,6 +52,18 @@ async def cmd_news(
                 Response(sep).value,
             )
         await message.answer(text)
+
+
+@news_router.message(filters.Command("send"))
+async def cmd_newsletter(
+    message: types.Message,
+    container: AsyncContainer,
+):
+    async with container() as di_container:
+        username = message.from_user.username
+        send_message = await di_container.get(SendMessage)
+        result = send_message(content=username)
+        await message.answer(Response(result).value)
 
 
 @news_router.message(filters.Command("newsletter"))
@@ -105,7 +118,6 @@ async def cmd_request_access(
         user = await get_admin_interactor(user_id, username)
         if user.role == Roles.ADMIN.value:
             return await message.answer("У вас уже есть права администратора")
-        users.append(user_id)
         await bot.send_message(
             chat_id=settings.HEAD_ADMIN_TG_ID,
             text=Response(text.request_access(user_id, username)).value,
@@ -114,6 +126,7 @@ async def cmd_request_access(
             ),
             parse_mode="MarkDownV2",
         )
+        users.append(user_id)
         await message.answer("Запрос отправлен")
 
 

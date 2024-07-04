@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from email.message import EmailMessage
 
+import aiosmtplib
+
 
 @dataclass
 class BaseSMTPServer(ABC):
@@ -20,7 +22,7 @@ class BaseSMTPServer(ABC):
 
 
 @dataclass
-class SMTPServer(BaseSMTPServer):
+class SyncSMTPServer(BaseSMTPServer):
     server: smtplib.SMTP_SSL
     from_address: str
     password: str
@@ -43,3 +45,29 @@ class SMTPServer(BaseSMTPServer):
 
     def stop(self) -> None:
         self.server.quit()
+
+
+@dataclass
+class AsyncSMTPServer(BaseSMTPServer):
+    server: aiosmtplib.SMTP
+    from_address: str
+    password: str
+    to_address: str
+    subject: str
+
+    async def start(self) -> None:
+        await self.server.connect()
+
+    def create_message(self, content: str) -> EmailMessage:
+        message = EmailMessage()
+        message["Subject"] = self.subject
+        message["From"] = self.from_address
+        message["To"] = self.to_address
+        message.set_content(content)
+        return message
+
+    async def send_email(self, message: EmailMessage) -> None:
+        await self.server.send_message(message)
+
+    async def stop(self) -> None:
+        await self.server.quit()

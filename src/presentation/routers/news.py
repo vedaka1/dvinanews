@@ -62,7 +62,7 @@ async def cmd_newsletter(
     async with container() as di_container:
         username = message.from_user.username
         send_message = await di_container.get(SendMessage)
-        result = send_message(content=username)
+        result = await send_message(content=username)
         await message.answer(Response(result).value)
 
 

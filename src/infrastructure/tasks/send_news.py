@@ -15,7 +15,7 @@ from domain.common.response import Link, Response
 logger = getLogger()
 
 
-async def send_news_task(bot: Bot, container: AsyncContainer):
+async def send_news_task(bot: Bot, container: AsyncContainer) -> None:
     async with container() as di_container:
         if not os.path.exists("./infrastructure/tasks/last_post_date.pkl"):
             with open("./infrastructure/tasks/last_post_date.pkl", "wb") as file:
@@ -31,6 +31,8 @@ async def send_news_task(bot: Bot, container: AsyncContainer):
         if latest_news.posted_at > last_recorded_date:
             with open("./infrastructure/tasks/last_post_date.pkl", "wb") as file:
                 pickle.dump(latest_news.posted_at, file)
+            if not users:
+                return
             text = "На сайте появилась новая новость:\n{0}\n[{1}]({2})".format(
                 latest_news.posted_at.strftime("%H:%M"),
                 Response(latest_news.title).value,

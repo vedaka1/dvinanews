@@ -3,6 +3,7 @@ from functools import lru_cache
 from smtplib import SMTP_SSL
 from typing import AsyncGenerator
 
+import aiosmtplib
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from dishka import AsyncContainer, Provider, Scope, make_async_container, provide
@@ -26,7 +27,7 @@ from infrastructure.persistence.main import (
 )
 from infrastructure.persistence.repositories.user import UserRepository
 from infrastructure.persistence.transaction import TransactionManager
-from infrastructure.smtp.main import BaseSMTPServer, SMTPServer
+from infrastructure.smtp.main import AsyncSMTPServer, BaseSMTPServer, SyncSMTPServer
 
 
 @lru_cache(1)
@@ -37,19 +38,6 @@ def init_logger() -> logging.Logger:
         encoding="UTF-8",
         format="%(asctime)s %(levelname)s: %(message)s",
     )
-
-
-@lru_cache(1)
-def init_smtp_server() -> SMTPServer:
-    server = SMTPServer(
-        SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT),
-        settings.SMTP_EMAIL,
-        settings.SMTP_PASSWORD,
-        settings.SMTP_EMAIL,
-        settings.SMTP_SUBJECT,
-    )
-    server.start()
-    return server
 
 
 class SettingsProvider(Provider):
@@ -70,8 +58,22 @@ class SettingsProvider(Provider):
         return ClientSession()
 
     @provide(scope=Scope.APP)
-    def app_smtp_server(self) -> BaseSMTPServer:
-        return init_smtp_server()
+    async def app_smtp_server(self) -> BaseSMTPServer:
+        server = AsyncSMTPServer(
+            aiosmtplib.SMTP(
+                hostname=settings.SMTP_HOST,
+                port=settings.SMTP_PORT,
+                username=settings.SMTP_EMAIL,
+                password=settings.SMTP_PASSWORD,
+                use_tls=True,
+            ),
+            settings.SMTP_EMAIL,
+            settings.SMTP_PASSWORD,
+            settings.SMTP_EMAIL,
+            settings.SMTP_SUBJECT,
+        )
+        await server.start()
+        return server
 
     @provide(scope=Scope.APP)
     def parser(self) -> Parser:
